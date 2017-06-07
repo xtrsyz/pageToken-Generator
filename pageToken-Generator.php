@@ -3,7 +3,7 @@
 function get_weight($weight,$number) {
 	$n = $number;
 	foreach($weight as $val) {
-		$res[] = floor($n/$val);
+		$res[] = (int) floor($n/$val);
 		$n = $n % $val;
 	}
 	return $res;
@@ -47,10 +47,10 @@ function number2token($number) {
 	}
 
 
-	$self['char_1'] = $b64[ $self['weight_1'] * 4 + $offset['w1']];		# converts range(0, 15) into  'AEIMQUYcgkosw048', 'BFJNRVZdhlptx159', 'CGKOSWaeimquy26-', 'DHLPTXbfjnrvz37_'
-	$self['char_16'] = $b64[ $self['weight_16'] + $offset['w16']];		# converts range(0 ,7) into 'ABCDEFGH' and 'IJKLMNOP'
+	$self['char_1'] = $b64[$self['weight_1'] * 4 + $offset['w1']];		# converts range(0, 15) into  'AEIMQUYcgkosw048', 'BFJNRVZdhlptx159', 'CGKOSWaeimquy26-', 'DHLPTXbfjnrvz37_'
+	$self['char_16'] = $b64[$self['weight_16'] + $offset['w16']];		# converts range(0 ,7) into 'ABCDEFGH' and 'IJKLMNOP'
 	$self['char_128'] = ($number >= 128)?$b64[$self['weight_128']]:'';
-	$self['char_65536'] =  ($number >= 16384)?$b64[$self['weight_65536']]:'';
+	$self['char_65536'] = ($number >= 16384)?$b64[$self['weight_65536']]:'';
 
 	$p = $prefix;
 	$n1 = $self['char_16'];
@@ -65,5 +65,56 @@ function number2token($number) {
 	return $self['token'];
 }
 
+function token2number($token) {
 
-		print_r(number2token($_GET['number']));
+	$b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+	if(strlen($token) < 6) die("Not A Valid Page Token");
+
+	if(substr($token,-1) != 'A') $isPrevToken = True;
+
+	# Remove prefix and previous/next tags
+	$t = substr($token,1,-2);
+
+	# Get Suffix Char and Remove it
+	$self['char_16384'] = substr($t,-1);
+	$t = substr($t,0,-1);
+
+	$self['char_1'] = $t[1];
+	$self['char_16'] = $t[0];
+
+	if(strlen($t)>2) $self['char_128'] = $t[2];
+	if(strlen($t)>3) $self['char_65536'] = $t[3];
+
+	$pos = strpos($b64, $self['char_1']);
+	$self['weight_1'] = ($pos - ($pos % 4)) / 4; # Converts these sequences to range(0, 15). 'AEIMQUYcgkosw048', 'BFJNRVZdhlptx159', 'CGKOSWaeimquy26-', 'DHLPTXbfjnrvz37_'
+
+	if( ($pos % 4 == 3) || ($pos % 4 == 1) ) $self['weight_8192'] = 1; # every odd 8192
+
+	$pos = strpos($b64, $self['char_16']);
+	$self['weight_16'] = $pos % 8; # Converts 'ABCDEFGH' and 'IJKLMNOP' into range(0, 7)
+
+	if(strlen($t) > 2) {
+		$pos = strpos($b64, $self['char_128']);
+		$self['weight_128'] = $pos;
+	}
+
+	if(strlen($t) > 3) {
+		$pos = strpos($b64, $self['char_16384']);
+		$self['weight_16384'] = ($pos - 1) /16; # Converts 'BRhx' into range(0, 3)
+		$self['weight_65536'] = strpos($b64, $self['char_65536']);
+	}
+
+	$retval = 	1 * $self['weight_1'] +
+				16 * $self['weight_16'] +
+				128 * $self['weight_128'] +
+				8192 * $self['weight_8192'] +
+				16384 * $self['weight_16384'] +
+				65536 * $self['weight_65536'];
+
+	return $retval;
+
+}
+
+		if (($_GET['number']) print_r(number2token($_GET['number']));
+		if (($_GET['token']) print_r(token2number($_GET['token']));

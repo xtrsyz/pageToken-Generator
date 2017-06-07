@@ -12,6 +12,12 @@ theoretically should work upto 4,194,304
 # Convert number to Token
 print_r(number2token(50));
 
+# Convert token to number
+print_r(token2number('CDIQAA'));
+
+# Convert prevToken to number
+print_r(token2number('CDIQAQ'));
+
 # Gets the first ten pageTokens for 50 items each.
 for ($i=1;$i<=10;$i++) print_r(number2token($i*50)."\r\n");
 ```

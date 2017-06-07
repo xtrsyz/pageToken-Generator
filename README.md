@@ -13,7 +13,7 @@ theoretically should work upto 4,194,304
 print_r(number2token(50));
 
 # Gets the first ten pageTokens for 50 items each.
-for ($i=1;$i<=10;$i++) print_r(number2token($i*5)."\r\n");
+for ($i=1;$i<=10;$i++) print_r(number2token($i*50)."\r\n");
 ```
 
 ### Note
